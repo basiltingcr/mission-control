@@ -25,7 +25,9 @@ Session: 2026-09-10/11 (Cowork, cloud; tests, curl and commits run by Basil). Th
 
 ## Lessons
 - I hard-coded :3000 from upstream's constant and hid the HTTP status behind a grep, so three
-  failed POSTs printed nothing. Show the status code; never pipe a verification through a
+  failed POSTs printed nothing. Then I wrote "Ops Desk holds :3000" into STATE.md and memory
+  without checking — the Ops Desk runs on 5477/4477. Corrected 2026-09-11; lsof later showed
+  :3000 free, so the occupant was transient and is unidentified. Show the status code; never pipe a verification through a
   filter that turns "failed" into silence.
 - Miscounted my own tests (said 21, wrote 20). Count with grep, not by recollection.
 

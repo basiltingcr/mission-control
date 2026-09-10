@@ -31,9 +31,11 @@ is at mission-control/ inside it; run pnpm commands there. WORKSPACE_ROOT in the
 repo root, and a project with no path runs its agents there.
 
 ## Known limits
-- The app runs on :3001 when Wild Pearl Ops Desk holds :3000. Upstream hard-codes
-  `FIELD_OPS_EXECUTE_URL = http://localhost:3000` in dispatcher.ts — field-ops auto-execute
-  would hit the wrong app in that case (autoExecute is false, so dormant today)
+- Next moves to :3001 if :3000 is taken at start-up (seen 2026-09-11; the occupant had exited
+  by the time lsof ran, so it is unidentified — not the Ops Desk, which uses 5477/4477). The
+  daemon hard-codes http://localhost:3000 in dispatcher.ts (:20 field-ops execute, :518 vault
+  session) — if the app is on another port those calls miss. Dormant: autoExecute false.
+  Fix if it ever matters: one MC_BASE_URL env-derived constant for both call sites.
 - expiresAt / onExpiry are stored and displayed, not enforced — no sweep exists yet
 - Proposal UI is untested (React, suite is node-env); verified by hand only
 - A task whose project path is set but unusable exits with only a daemon.log line — no board
