@@ -179,6 +179,15 @@ export function buildSafeEnv(opts?: { agentTeams?: boolean }): Record<string, st
     if (process.env.PATHEXT) safeEnv.PATHEXT = process.env.PATHEXT;
   }
 
+  // Unix identity + temp vars. On macOS, Claude Code keeps its OAuth credential in
+  // the login Keychain, and the lookup fails with "Not logged in" when the child has
+  // no USER/LOGNAME/TMPDIR. None of these carry secrets.
+  if (process.platform !== "win32") {
+    if (process.env.USER) safeEnv.USER = process.env.USER;
+    if (process.env.LOGNAME) safeEnv.LOGNAME = process.env.LOGNAME;
+    if (process.env.TMPDIR) safeEnv.TMPDIR = process.env.TMPDIR;
+  }
+
   // Claude Code OAuth token — v2.1.71+ stores the active token in this env
   // var rather than .credentials.json.  The daemon process inherits it from
   // the user's session; child agent processes need it to authenticate.

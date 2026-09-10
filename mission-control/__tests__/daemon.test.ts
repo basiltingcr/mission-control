@@ -168,9 +168,28 @@ describe("buildSafeEnv", () => {
       "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
       // OAuth token (passed through for child agent auth)
       "CLAUDE_CODE_OAUTH_TOKEN",
+      // Unix identity + temp vars (macOS Keychain lookup fails without them)
+      "USER", "LOGNAME", "TMPDIR",
     ];
     for (const key of keys) {
       expect(allowedKeys).toContain(key);
+    }
+  });
+
+  it("passes USER, LOGNAME and TMPDIR through on non-Windows so Keychain auth works", () => {
+    if (process.platform === "win32") return;
+    const saved = { USER: process.env.USER, LOGNAME: process.env.LOGNAME, TMPDIR: process.env.TMPDIR };
+    process.env.USER = "testuser";
+    process.env.LOGNAME = "testuser";
+    process.env.TMPDIR = "/tmp/testuser";
+
+    const env = buildSafeEnv();
+    expect(env.USER).toBe("testuser");
+    expect(env.LOGNAME).toBe("testuser");
+    expect(env.TMPDIR).toBe("/tmp/testuser");
+
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
     }
   });
 
