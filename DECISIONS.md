@@ -25,3 +25,20 @@ Change: the Zod rule accepts POSIX, Windows-drive and UNC absolute forms; `resol
 uses `path.isAbsolute` + `statSync` on the machine the daemon runs on.
 Why: validation runs in the Next server, the existence check in the daemon; on someone else's
 install those need not be the same OS.
+
+## MC-004 — Proposals keep upstream's two-state status; `resolution` records the how (2026-09-11)
+Status: active. Refines workspace D-010, which said "status widened to open | accepted |
+edited | rejected | expired".
+Change: `status` stays `pending | answered`. New nullable fields on DecisionItem:
+`recommendedOption` (must be one of options), `door` (one_way | two_way), `evidence`,
+`expiresAt`, `onExpiry` (apply_recommendation | reject), and `resolution`
+(accepted | edited | rejected | expired). `deriveResolution()` in src/lib/proposal.ts is the
+one tested place the accept/edit rule lives; the PUT route calls it.
+Why: 22 sites key on the literal strings "pending"/"answered", including the daemon's
+`hasPendingDecision` and the untyped loop-detection writer in run-task.ts where tsc cannot
+catch a missed rename. `pending` ≡ D-010's `open`; the four widened states are `answered` plus
+a resolution. Same capability, a fraction of the surface.
+Carve-outs: cross-field rules are enforced on create only, not on partial updates; the expiry
+sweep (what makes two-way doors auto-fire) is Phase 4 — until then expiresAt is display-only.
+Loop-detection default (Basil's call): recommend "Skip this task and continue mission",
+two_way, evidence = last error, no expiry.

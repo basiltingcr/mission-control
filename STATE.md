@@ -1,18 +1,18 @@
 # mission-control (fork) — STATE
 
-Updated 2026-09-10. Live state only; reasoning lives in DECISIONS.md, session detail in handoffs/.
+Updated 2026-09-11. Live state only; reasoning lives in DECISIONS.md, session detail in handoffs/.
 Upstream: MeisnerDan/mission-control. This fork is Basil's cross-project cockpit (workspace D-008).
 
 ## Focus
-Phase 3: make the cockpit run agents in each project's own directory, then extend decisions
-into proposals (workspace D-010).
+Phase 3 done. Next: Phase 4 — the expiry sweep that makes two-way doors auto-fire, the
+morning digest, research routines (workspace STATE.md).
 
 ## Threads
 | Thread | Status | Next |
 |---|---|---|
 | Project.path — agents run in the project's folder | done 2026-09-10 (3 commits, 11d6649..16cd2ed) | — |
 | macOS Keychain auth for spawned agents | fixed 2026-09-10 (16cd2ed) | offer upstream as a PR |
-| Decision schema → proposals (recommended default, door, evidence, expiry) | next | tests-first on `decisionCreateSchema`; see workspace D-010 |
+| Decision schema → proposals (recommended default, door, evidence, expiry) | done 2026-09-11 (schema + UI, 2 commits) | expiry sweep — Phase 4 |
 | Own STATE/DECISIONS/handoffs in this repo | done 2026-09-10 | — |
 
 ## Verified end to end (2026-09-10)
@@ -21,6 +21,9 @@ into proposals (workspace D-010).
 - Task on that venture, assigned to Researcher, run from the card: daemon log shows
   `will run in /Users/basil/Desktop/Wild Pearl`; agent's report shows the same `pwd`
 - Suite 213/213, `pnpm tsc --noEmit` clean
+- (2026-09-11) Three proposals POSTed via curl, resolved from the Decisions page: accepted,
+  edited, rejected each present in data/decisions.json; suite 233/233, `pnpm check` clean
+  apart from upstream's 7 unused-var warnings
 
 ## Layout (do not flatten)
 Repo root = agent workspace (CLAUDE.md, commands/, skills/, .claude/commands/). The Next.js app
@@ -28,6 +31,11 @@ is at mission-control/ inside it; run pnpm commands there. WORKSPACE_ROOT in the
 repo root, and a project with no path runs its agents there.
 
 ## Known limits
+- The app runs on :3001 when Wild Pearl Ops Desk holds :3000. Upstream hard-codes
+  `FIELD_OPS_EXECUTE_URL = http://localhost:3000` in dispatcher.ts — field-ops auto-execute
+  would hit the wrong app in that case (autoExecute is false, so dormant today)
+- expiresAt / onExpiry are stored and displayed, not enforced — no sweep exists yet
+- Proposal UI is untested (React, suite is node-env); verified by hand only
 - A task whose project path is set but unusable exits with only a daemon.log line — no board
   trace, no decision item (same as upstream's blocked/already-running exits)
 - Relative path → 400, but the UI toast is the generic "Failed to update project"
@@ -37,4 +45,5 @@ repo root, and a project with no path runs its agents there.
 
 ## Divergence from upstream
 - Project.path + resolveProjectCwd (11d6649), dialog field (ea0ab45), Keychain env (16cd2ed)
+- Proposal fields on DecisionItem + deriveResolution + ProposalMeta UI (MC-004)
 - STATE.md, DECISIONS.md, handoffs/ at repo root — upstream has none
