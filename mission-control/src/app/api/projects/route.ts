@@ -17,6 +17,7 @@ export async function GET(request: Request) {
   let projects = data.projects.map((p) => ({
     ...p,
     teamMembers: p.teamMembers ?? [],
+    path: p.path ?? null,
   }));
 
   // Filter out soft-deleted by default
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
       status: body.status,
       color: body.color,
       teamMembers: body.teamMembers,
+      path: body.path,
       createdAt: new Date().toISOString(),
       tags: body.tags,
       deletedAt: null,

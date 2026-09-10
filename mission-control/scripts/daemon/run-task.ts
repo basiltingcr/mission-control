@@ -20,7 +20,8 @@ import { readFileSync, writeFileSync, existsSync } from "fs";
 import { execSync, spawn } from "child_process";
 import path from "path";
 import { AgentRunner, parseClaudeOutput } from "./runner";
-import { buildTaskPrompt, getTask, isTaskUnblocked, hasPendingDecision } from "./prompt-builder";
+import { buildTaskPrompt, getTask, getProjectPath, isTaskUnblocked, hasPendingDecision } from "./prompt-builder";
+import { resolveProjectCwd } from "./security";
 import { loadConfig } from "./config";
 import { logger } from "./logger";
 import type { ProjectRun, ProjectRunsFile } from "./types";
@@ -833,6 +834,17 @@ async function main() {
     }
   }
 
+  // 6b. Resolve the working directory for this task's project. Done here, before the
+  //     "running" entry is written, so a bad path exits without leaving a stale run.
+  let agentCwd: string;
+  try {
+    agentCwd = resolveProjectCwd(getProjectPath(task.projectId ?? null), WORKSPACE_ROOT);
+  } catch (err) {
+    logger.error("run-task", `Task ${taskId}: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+  logger.info("run-task", `Task ${taskId} will run in ${agentCwd}`);
+
   // 7. Load execution config
   const config = loadConfig();
   const { maxTurns, timeoutMinutes, skipPermissions, allowedTools } = config.execution;
@@ -927,7 +939,7 @@ This is session ${continuationIndex + 1}. Previous session(s) ran out of turns o
   }
 
   // 10. Spawn Claude Code
-  const runner = new AgentRunner(WORKSPACE_ROOT);
+  const runner = new AgentRunner(agentCwd);
   try {
     const result = await runner.spawnAgent({
       prompt,
@@ -936,7 +948,7 @@ This is session ${continuationIndex + 1}. Previous session(s) ran out of turns o
       skipPermissions,
       allowedTools,
       agentTeams: useAgentTeams,
-      cwd: WORKSPACE_ROOT,
+      cwd: agentCwd,
       onSpawned: (pid) => {
         // Update the PID in active-runs immediately after spawn
         try {

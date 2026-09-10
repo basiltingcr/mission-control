@@ -51,6 +51,7 @@ export const LIMITS = {
   SUBTASK_TITLE: 500,
   COMMENT_CONTENT: 5000,
   TAG: 100,
+  PROJECT_PATH: 500,
   MAX_SUBTASKS: 100,
   MAX_DAILY_ACTIONS: 100,
   MAX_COMMENTS: 100,
@@ -165,12 +166,25 @@ export const goalUpdateSchema = z.object({
 
 // ─── Project schemas ───────────────────────────────────────────────────────────
 
+// Absolute POSIX ("/x"), Windows drive ("C:\\x") or UNC ("\\\\server\\share") only.
+const ABSOLUTE_PATH_RE = /^(?:\/|[A-Za-z]:[\\/]|\\\\)/;
+// Any ".." path segment, on either separator.
+const PARENT_SEGMENT_RE = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
+
+const projectPathSchema = z
+  .string()
+  .min(1, "Path cannot be empty — use null to unset")
+  .max(LIMITS.PROJECT_PATH)
+  .refine((p) => ABSOLUTE_PATH_RE.test(p), "Path must be absolute")
+  .refine((p) => !PARENT_SEGMENT_RE.test(p), "Path cannot contain '..' segments");
+
 export const projectCreateSchema = z.object({
   name: z.string().min(1, "Name is required").max(LIMITS.TITLE),
   description: z.string().max(LIMITS.DESCRIPTION).optional().default(""),
   status: projectStatusEnum.optional().default("active"),
   color: z.string().max(20).optional().default("#6B7280"),
   teamMembers: z.array(z.string().max(50)).max(20).optional().default([]),
+  path: projectPathSchema.nullable().optional().default(null),
   tags: z.array(z.string().max(LIMITS.TAG)).max(LIMITS.MAX_TAGS).optional().default([]),
   deletedAt: z.string().nullable().optional().default(null),
 });
@@ -182,6 +196,7 @@ export const projectUpdateSchema = z.object({
   status: projectStatusEnum.optional(),
   color: z.string().max(20).optional(),
   teamMembers: z.array(z.string().max(50)).max(20).optional(),
+  path: projectPathSchema.nullable().optional(),
   tags: z.array(z.string().max(LIMITS.TAG)).max(LIMITS.MAX_TAGS).optional(),
   deletedAt: z.string().nullable().optional(),
 });

@@ -217,6 +217,11 @@ export interface Project {
   status: ProjectStatus;
   color: string;
   teamMembers: string[];
+  /**
+   * Absolute path to the project's working directory on disk.
+   * null → agents run in the mission-control workspace root (pre-`path` behaviour).
+   */
+  path: string | null;
   createdAt: string;
   tags: string[];
   deletedAt: string | null;

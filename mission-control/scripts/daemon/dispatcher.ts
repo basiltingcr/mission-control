@@ -4,7 +4,8 @@ import path from "path";
 import { logger } from "./logger";
 import { AgentRunner, parseClaudeOutput } from "./runner";
 import { HealthMonitor } from "./health";
-import { buildTaskPrompt, buildScheduledPrompt, getPendingTasks, isTaskUnblocked, hasPendingDecision } from "./prompt-builder";
+import { buildTaskPrompt, buildScheduledPrompt, getPendingTasks, getProjectPath, isTaskUnblocked, hasPendingDecision } from "./prompt-builder";
+import { resolveProjectCwd } from "./security";
 import type { DaemonConfig, ProjectRunsFile } from "./types";
 
 const DATA_DIR = path.resolve(__dirname, "../../data");
@@ -231,6 +232,15 @@ export class Dispatcher {
 
       const prompt = buildTaskPrompt(agentId, task);
 
+      // Resolve the project's working directory; abort rather than run in the wrong repo.
+      let agentCwd: string;
+      try {
+        agentCwd = resolveProjectCwd(getProjectPath(task.projectId ?? null), WORKSPACE_ROOT);
+      } catch (err) {
+        logger.error("dispatcher", `Task ${taskId}: ${err instanceof Error ? err.message : String(err)}`);
+        return;
+      }
+
       // Start tracking the session
       const sessionId = this.health.startSession(agentId, taskId, "task", 0);
 
@@ -241,7 +251,7 @@ export class Dispatcher {
         timeoutMinutes: this.config.execution.timeoutMinutes,
         skipPermissions: this.config.execution.skipPermissions,
         allowedTools: this.config.execution.allowedTools,
-        cwd: "", // Uses runner default (workspace root)
+        cwd: agentCwd,
       });
 
       // Handle completion asynchronously

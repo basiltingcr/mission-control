@@ -1,3 +1,4 @@
+import { statSync } from "fs";
 import path from "path";
 
 // ─── Credential Scrubbing ────────────────────────────────────────────────────
@@ -58,6 +59,41 @@ export function validatePathWithinWorkspace(
   const resolved = path.resolve(workspaceRoot, filePath);
   const normalizedRoot = path.resolve(workspaceRoot);
   return resolved.startsWith(normalizedRoot + path.sep) || resolved === normalizedRoot;
+}
+
+/**
+ * Resolve the working directory an agent should run in for a project.
+ *
+ * No configured path → the fallback (workspace root), i.e. pre-`path` behaviour.
+ * A configured path  → returned only if absolute, free of ".." segments, and an
+ *                      existing directory.
+ *
+ * A configured-but-unusable path THROWS rather than falling back: an agent silently
+ * doing work in the wrong repository is worse than a task that does not run.
+ */
+export function resolveProjectCwd(
+  projectPath: string | null | undefined,
+  fallback: string
+): string {
+  if (projectPath === null || projectPath === undefined || projectPath === "") {
+    return fallback;
+  }
+  if (!path.isAbsolute(projectPath)) {
+    throw new Error(`Project path is not absolute: "${projectPath}"`);
+  }
+  if (/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(projectPath)) {
+    throw new Error(`Project path contains a ".." segment: "${projectPath}"`);
+  }
+  let stats;
+  try {
+    stats = statSync(projectPath);
+  } catch {
+    throw new Error(`Project path does not exist: "${projectPath}"`);
+  }
+  if (!stats.isDirectory()) {
+    throw new Error(`Project path is not a directory: "${projectPath}"`);
+  }
+  return projectPath;
 }
 
 // ─── Prompt Sanitization ─────────────────────────────────────────────────────

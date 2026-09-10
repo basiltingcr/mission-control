@@ -29,6 +29,12 @@ interface SkillDef {
   agentIds: string[];
 }
 
+interface ProjectDef {
+  id: string;
+  name: string;
+  path?: string | null;
+}
+
 interface TaskDef {
   id: string;
   title: string;
@@ -527,6 +533,22 @@ export function buildScheduledPrompt(command: string): string {
 export function getTask(taskId: string): TaskDef | null {
   const data = readJSON<{ tasks: TaskDef[] }>("tasks.json");
   return data.tasks.find(t => t.id === taskId) ?? null;
+}
+
+/**
+ * Look up a project's configured working directory.
+ * null when the task has no project, the project is unknown, or no path is set.
+ */
+export function getProjectPath(projectId: string | null): string | null {
+  if (!projectId) return null;
+  if (!existsSync(path.join(DATA_DIR, "projects.json"))) return null;
+  const data = readJSON<{ projects: ProjectDef[] }>("projects.json");
+  const project = data.projects.find(p => p.id === projectId);
+  if (!project) {
+    logger.warn("prompt-builder", `Task references unknown project ${projectId}`);
+    return null;
+  }
+  return project.path ?? null;
 }
 
 /**
