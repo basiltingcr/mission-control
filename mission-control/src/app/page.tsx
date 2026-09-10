@@ -168,7 +168,7 @@ export default function CommandCenterPage() {
     }
   };
 
-  const handleCreateProject = async (formData: { name: string; description: string; color: string; tags: string; teamMembers?: string[] }) => {
+  const handleCreateProject = async (formData: { name: string; description: string; color: string; tags: string; teamMembers?: string[]; path?: string | null }) => {
     try {
       const res = await apiFetch("/api/ventures", {
         method: "POST",
@@ -179,6 +179,7 @@ export default function CommandCenterPage() {
           status: "active",
           color: formData.color,
           teamMembers: formData.teamMembers ?? [],
+          path: formData.path ?? null,
           tags: formData.tags.split(",").map((t) => t.trim()).filter(Boolean),
         }),
       });

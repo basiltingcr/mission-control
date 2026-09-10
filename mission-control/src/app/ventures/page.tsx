@@ -28,7 +28,7 @@ export default function ProjectsPage() {
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const handleCreateProject = async (data: { name: string; description: string; color: string; tags: string; teamMembers?: string[] }) => {
+  const handleCreateProject = async (data: { name: string; description: string; color: string; tags: string; teamMembers?: string[]; path?: string | null }) => {
     await createProject({
       id: `proj_${Date.now()}`,
       name: data.name,
@@ -36,6 +36,7 @@ export default function ProjectsPage() {
       status: "active",
       color: data.color,
       teamMembers: data.teamMembers ?? [],
+      path: data.path ?? null,
       tags: data.tags.split(",").map((t) => t.trim()).filter(Boolean),
       createdAt: new Date().toISOString(),
     });
@@ -48,6 +49,7 @@ export default function ProjectsPage() {
     color: string;
     teamMembers: string[];
     tags: string[];
+    path: string | null;
   }) => {
     if (!editingProject) return;
     await updateProject(editingProject.id, data);

@@ -41,6 +41,7 @@ interface EditProjectDialogProps {
     color: string;
     teamMembers: string[];
     tags: string[];
+    path: string | null;
   }) => void;
 }
 
@@ -53,6 +54,7 @@ export function EditProjectDialog({ open, onOpenChange, project, agents, onSubmi
   const [color, setColor] = useState(project.color);
   const [tags, setTags] = useState(project.tags.join(", "));
   const [teamMembers, setTeamMembers] = useState<string[]>(project.teamMembers);
+  const [path, setPath] = useState(project.path ?? "");
 
   // Reset form when project changes
   useEffect(() => {
@@ -62,6 +64,7 @@ export function EditProjectDialog({ open, onOpenChange, project, agents, onSubmi
     setColor(project.color);
     setTags(project.tags.join(", "));
     setTeamMembers([...project.teamMembers]);
+    setPath(project.path ?? "");
   }, [project]);
 
   const toggleTeamMember = (agentId: string) => {
@@ -80,6 +83,7 @@ export function EditProjectDialog({ open, onOpenChange, project, agents, onSubmi
       color,
       teamMembers,
       tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+      path: path.trim() || null,
     });
     onOpenChange(false);
   };
@@ -202,6 +206,19 @@ export function EditProjectDialog({ open, onOpenChange, project, agents, onSubmi
             </div>
           )}
 
+          <div className="space-y-2">
+            <Label htmlFor="edit-proj-path">Working directory</Label>
+            <Input
+              id="edit-proj-path"
+              value={path}
+              onChange={(e) => setPath(e.target.value)}
+              placeholder="/Users/you/Projects/venture-name"
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Absolute path. Agents run in this folder; leave blank to run in the Mission Control workspace.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="edit-proj-tags">Tags (comma-separated)</Label>
             <Input

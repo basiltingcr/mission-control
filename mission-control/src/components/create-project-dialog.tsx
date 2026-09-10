@@ -25,7 +25,7 @@ const PROJECT_COLORS = [
 interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; description: string; color: string; tags: string; teamMembers: string[] }) => void;
+  onSubmit: (data: { name: string; description: string; color: string; tags: string; teamMembers: string[]; path: string | null }) => void;
 }
 
 export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProjectDialogProps) {
@@ -37,6 +37,7 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
   const [color, setColor] = useState(PROJECT_COLORS[0]);
   const [tags, setTags] = useState("");
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [path, setPath] = useState("");
 
   const toggleTeamMember = (agentId: string) => {
     setTeamMembers((prev) =>
@@ -47,12 +48,13 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), description, color, tags, teamMembers });
+    onSubmit({ name: name.trim(), description, color, tags, teamMembers, path: path.trim() || null });
     setName("");
     setDescription("");
     setColor(PROJECT_COLORS[0]);
     setTags("");
     setTeamMembers([]);
+    setPath("");
     onOpenChange(false);
   };
 
@@ -156,6 +158,19 @@ export function CreateProjectDialog({ open, onOpenChange, onSubmit }: CreateProj
             </div>
           )}
 
+          <div className="space-y-2">
+            <Label htmlFor="proj-path">Working directory</Label>
+            <Input
+              id="proj-path"
+              value={path}
+              onChange={(e) => setPath(e.target.value)}
+              placeholder="/Users/you/Projects/venture-name"
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Absolute path. Agents run in this folder; leave blank to run in the Mission Control workspace.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="proj-tags">Tags (comma-separated)</Label>
             <Input
