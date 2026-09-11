@@ -3,6 +3,8 @@
 Session: 2026-09-10/11 (Cowork, cloud; tests, curl and commits run by Basil). Thread: Phase 3(b).
 
 ## What shipped
+(Both pieces below were left UNCOMMITTED at the time this handoff was first written — the commit
+commands were issued but never run. Committed 2026-09-11 at the Phase 3 close-out.)
 - Schema commit: DecisionItem proposal fields, Zod enums + cross-field refinements,
   deriveResolution(), POST/PUT/GET route changes, loop-detection writer sets Skip/two_way,
   fixtures. 20 tests in __tests__/proposal.test.ts.

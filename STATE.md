@@ -4,15 +4,18 @@ Updated 2026-09-11. Live state only; reasoning lives in DECISIONS.md, session de
 Upstream: MeisnerDan/mission-control. This fork is Basil's cross-project cockpit (workspace D-008).
 
 ## Focus
-Phase 3 done. Next: Phase 4 — the expiry sweep that makes two-way doors auto-fire, the
-morning digest, research routines (workspace STATE.md).
+Phase 3 done. Phase 4 per workspace D-013 (2026-09-11): this app stays on the Mac as the cockpit with
+local execution OFF — unattended coding runs in Anthropic-hosted routines; Run fires a routine (4.4);
+the daemon's only jobs become the expiry sweep (4.5) and, later, nothing that spawns `claude` here.
+First step is 4.0 lock-down: clear the Wild Pearl venture path, polling off, allowedTools trimmed.
+Order and checks: workspace STATE.md.
 
 ## Threads
 | Thread | Status | Next |
 |---|---|---|
 | Project.path — agents run in the project's folder | done 2026-09-10 (3 commits, 11d6649..16cd2ed) | — |
 | macOS Keychain auth for spawned agents | fixed 2026-09-10 (16cd2ed) | offer upstream as a PR |
-| Decision schema → proposals (recommended default, door, evidence, expiry) | done 2026-09-11 (schema + UI, 2 commits) | expiry sweep — Phase 4 |
+| Decision schema → proposals (recommended default, door, evidence, expiry) | built and verified 2026-09-11; committed 2026-09-11 (was uncommitted in the working tree until the close-out) | expiry sweep — Phase 4.5 |
 | Own STATE/DECISIONS/handoffs in this repo | done 2026-09-10 | — |
 
 ## Verified end to end (2026-09-10)
@@ -43,7 +46,9 @@ repo root, and a project with no path runs its agents there.
 - Relative path → 400, but the UI toast is the generic "Failed to update project"
 - src/app/api/ventures/route.ts is upstream's copy of projects/route.ts; both edited in step
 - validatePathWithinWorkspace() in security.ts is exported and tested but called by nothing
-- data/*.json are gitignored: ventures, tasks and decisions live only on this machine
+- data/*.json are TRACKED from upstream's zip, not ignored (tasks, projects, decisions, inbox,
+  activity-log, brain-dump). Marked skip-worktree 2026-09-11 so local changes never stage; never
+  `git add -A` or `commit -a` in this repo. Six commits to date verified clean of data/
 
 ## Divergence from upstream
 - Project.path + resolveProjectCwd (11d6649), dialog field (ea0ab45), Keychain env (16cd2ed)
