@@ -293,6 +293,12 @@ describe("decision request flow", () => {
       answer: null,
       answeredAt: null,
       createdAt: new Date().toISOString(),
+      recommendedOption: null,
+      door: null,
+      evidence: "",
+      expiresAt: null,
+      onExpiry: null,
+      resolution: null,
     };
 
     decisionsData.decisions.push(decision);

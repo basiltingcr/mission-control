@@ -534,6 +534,13 @@ function checkLoopAndEscalate(
         answer: null,
         answeredAt: null,
         createdAt: new Date().toISOString(),
+        // Proposal fields (fork, MC-004). Skipping is reversible — the task can be re-run.
+        recommendedOption: "Skip this task and continue mission",
+        door: "two_way",
+        evidence: `Last error: ${lastError}`,
+        expiresAt: null,
+        onExpiry: null,
+        resolution: null,
       });
 
       writeFileSync(DECISIONS_FILE, JSON.stringify(decisions, null, 2), "utf-8");

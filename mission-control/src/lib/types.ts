@@ -305,6 +305,12 @@ export interface InboxFile {
 
 export type DecisionStatus = "pending" | "answered";
 
+/** How an answered decision was resolved. null = answered without a recommendation. */
+export type DecisionResolution = "accepted" | "edited" | "rejected" | "expired";
+/** Bezos door type: two-way decisions are reversible and may auto-apply on expiry. */
+export type DecisionDoor = "one_way" | "two_way";
+export type DecisionOnExpiry = "apply_recommendation" | "reject";
+
 export interface DecisionItem {
   id: string;
   requestedBy: AgentRole | "system";
@@ -316,6 +322,15 @@ export interface DecisionItem {
   answer: string | null;
   answeredAt: string | null;
   createdAt: string;
+  // ── Proposal fields (fork, MC-004). All nullable so upstream decisions still fit. ──
+  /** Must be one of `options`. The default the requester recommends. */
+  recommendedOption: string | null;
+  door: DecisionDoor | null;
+  /** Why the recommendation — the evidence behind it. */
+  evidence: string;
+  expiresAt: string | null;
+  onExpiry: DecisionOnExpiry | null;
+  resolution: DecisionResolution | null;
 }
 
 export interface DecisionsFile {

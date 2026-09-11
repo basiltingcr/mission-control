@@ -3,6 +3,7 @@ import { getDecisions, mutateDecisions, mutateActivityLog } from "@/lib/data";
 import type { DecisionItem, ActivityEvent } from "@/lib/types";
 import { decisionCreateSchema, decisionUpdateSchema, validateBody, DEFAULT_LIMIT } from "@/lib/validations";
 import { generateId } from "@/lib/utils";
+import { deriveResolution } from "@/lib/proposal";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +11,16 @@ export async function GET(request: Request) {
   const data = await getDecisions();
 
   const total = data.decisions.length;
-  let decisions = data.decisions;
+  // Backfill proposal fields for decisions written before the fork added them
+  let decisions = data.decisions.map((d) => ({
+    ...d,
+    recommendedOption: d.recommendedOption ?? null,
+    door: d.door ?? null,
+    evidence: d.evidence ?? "",
+    expiresAt: d.expiresAt ?? null,
+    onExpiry: d.onExpiry ?? null,
+    resolution: d.resolution ?? null,
+  }));
 
   if (status) {
     decisions = decisions.filter((d) => d.status === status);
@@ -56,6 +66,12 @@ export async function POST(request: Request) {
       answer: null,
       answeredAt: null,
       createdAt: body.createdAt ?? new Date().toISOString(),
+      recommendedOption: body.recommendedOption,
+      door: body.door,
+      evidence: body.evidence,
+      expiresAt: body.expiresAt,
+      onExpiry: body.onExpiry,
+      resolution: null,
     };
     data.decisions.push(decision);
     return decision;
@@ -93,11 +109,17 @@ export async function PUT(request: Request) {
       : (body.status ?? data.decisions[idx].status);
     const wasAnswered = data.decisions[idx].status === "pending" && effectiveStatus === "answered";
 
+    const existing = data.decisions[idx];
     data.decisions[idx] = {
-      ...data.decisions[idx],
+      ...existing,
       ...body,
       status: effectiveStatus,
-      answeredAt: wasAnswered ? new Date().toISOString() : data.decisions[idx].answeredAt,
+      answeredAt: wasAnswered ? new Date().toISOString() : existing.answeredAt,
+      resolution: deriveResolution(
+        { recommendedOption: existing.recommendedOption ?? null, resolution: existing.resolution ?? null },
+        body.answer,
+        body.resolution,
+      ),
     };
 
     return { decision: data.decisions[idx], wasAnswered };
@@ -115,7 +137,9 @@ export async function PUT(request: Request) {
         type: "decision_answered",
         actor: "me",
         taskId: result.decision.taskId,
-        summary: `Answered: ${result.decision.question.slice(0, 60)} → "${body.answer}"`,
+        summary: body.answer
+          ? `Answered: ${result.decision.question.slice(0, 60)} → "${body.answer}"`
+          : `${result.decision.resolution === "rejected" ? "Rejected" : "Resolved"}: ${result.decision.question.slice(0, 60)}`,
         details: "",
         timestamp: new Date().toISOString(),
       };

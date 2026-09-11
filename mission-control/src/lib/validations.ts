@@ -15,6 +15,13 @@ const actorEnum = z.string().min(1).max(50);
 const messageTypeEnum = z.enum(["delegation", "report", "question", "update", "approval"]);
 const messageStatusEnum = z.enum(["unread", "read", "archived"]);
 const decisionStatusEnum = z.enum(["pending", "answered"]);
+const decisionResolutionEnum = z.enum(["accepted", "edited", "rejected", "expired"]);
+const decisionDoorEnum = z.enum(["one_way", "two_way"]);
+const decisionOnExpiryEnum = z.enum(["apply_recommendation", "reject"]);
+const isoDateString = z
+  .string()
+  .max(40)
+  .refine((s) => !Number.isNaN(Date.parse(s)), "Must be a parseable date string");
 const eventTypeEnum = z.enum([
   "task_created",
   "task_updated",
@@ -247,15 +254,33 @@ export const inboxUpdateSchema = z.object({
 
 // ─── Decision schemas ──────────────────────────────────────────────────────────
 
-export const decisionCreateSchema = z.object({
-  id: z.string().optional(),
-  requestedBy: actorEnum.optional().default("developer"),
-  taskId: z.string().nullable().optional().default(null),
-  question: z.string().min(1, "Question is required").max(LIMITS.QUESTION),
-  options: z.array(z.string().max(LIMITS.ANSWER)).max(LIMITS.MAX_OPTIONS).optional().default([]),
-  context: z.string().max(LIMITS.CONTEXT).optional().default(""),
-  createdAt: z.string().max(30).optional(),
-});
+export const decisionCreateSchema = z
+  .object({
+    id: z.string().optional(),
+    requestedBy: actorEnum.optional().default("developer"),
+    taskId: z.string().nullable().optional().default(null),
+    question: z.string().min(1, "Question is required").max(LIMITS.QUESTION),
+    options: z.array(z.string().max(LIMITS.ANSWER)).max(LIMITS.MAX_OPTIONS).optional().default([]),
+    context: z.string().max(LIMITS.CONTEXT).optional().default(""),
+    createdAt: z.string().max(30).optional(),
+    // Proposal fields (fork, MC-004)
+    recommendedOption: z.string().max(LIMITS.ANSWER).nullable().optional().default(null),
+    door: decisionDoorEnum.nullable().optional().default(null),
+    evidence: z.string().max(LIMITS.CONTEXT).optional().default(""),
+    expiresAt: isoDateString.nullable().optional().default(null),
+    onExpiry: decisionOnExpiryEnum.nullable().optional().default(null),
+  })
+  .superRefine((d, ctx) => {
+    if (d.recommendedOption !== null && !d.options.includes(d.recommendedOption)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["recommendedOption"], message: "recommendedOption must be one of options" });
+    }
+    if (d.onExpiry !== null && d.expiresAt === null) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["onExpiry"], message: "onExpiry requires expiresAt" });
+    }
+    if (d.onExpiry === "apply_recommendation" && d.recommendedOption === null) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["onExpiry"], message: "apply_recommendation requires a recommendedOption" });
+    }
+  });
 
 export const decisionUpdateSchema = z.object({
   id: z.string().min(1, "Decision ID is required"),
@@ -266,6 +291,14 @@ export const decisionUpdateSchema = z.object({
   context: z.string().max(LIMITS.CONTEXT).optional(),
   requestedBy: actorEnum.optional(),
   taskId: z.string().nullable().optional(),
+  // Proposal fields (fork, MC-004). Cross-field rules are not re-checked on partial
+  // updates; the create schema is where the shape is enforced.
+  recommendedOption: z.string().max(LIMITS.ANSWER).nullable().optional(),
+  door: decisionDoorEnum.nullable().optional(),
+  evidence: z.string().max(LIMITS.CONTEXT).optional(),
+  expiresAt: isoDateString.nullable().optional(),
+  onExpiry: decisionOnExpiryEnum.nullable().optional(),
+  resolution: decisionResolutionEnum.nullable().optional(),
 });
 
 // ─── Activity Log schemas ──────────────────────────────────────────────────────

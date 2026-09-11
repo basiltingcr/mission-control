@@ -365,6 +365,12 @@ export async function POST() {
         answer: null,
         answeredAt: null,
         createdAt: daysAgo(1),
+        recommendedOption: null,
+        door: null,
+        evidence: "",
+        expiresAt: null,
+        onExpiry: null,
+        resolution: null,
       },
     ],
   });
