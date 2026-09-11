@@ -13,6 +13,7 @@ import { DecisionCardSkeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/error-state";
 import type { DecisionItem } from "@/lib/types";
 import { AGENT_ROLES } from "@/lib/types";
+import { ProposalMeta, isRecommended, RESOLUTION_LABEL } from "@/components/proposal-meta";
 
 const agentIcons: Record<string, typeof User> = {
   me: User,
@@ -35,6 +36,13 @@ export default function DecisionsPage() {
     await updateDecision(dec.id, {
       status: "answered" as const,
       answer,
+    });
+  };
+
+  const handleReject = async (dec: DecisionItem) => {
+    await updateDecision(dec.id, {
+      status: "answered" as const,
+      resolution: "rejected" as const,
     });
   };
 
@@ -121,20 +129,28 @@ export default function DecisionsPage() {
                       </p>
                     )}
 
-                    {/* Option buttons */}
+                    <ProposalMeta decision={dec} />
+
+                    {/* Option buttons — the recommended one is filled, the rest outlined */}
                     {dec.options.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {dec.options.map((opt, i) => (
                           <Button
                             key={i}
-                            variant="outline"
+                            variant={isRecommended(dec, opt) ? "default" : "outline"}
                             size="sm"
                             className="text-xs"
                             onClick={() => handleAnswer(dec, opt)}
                           >
                             {opt}
+                            {isRecommended(dec, opt) && <span className="ml-1 opacity-70">· recommended</span>}
                           </Button>
                         ))}
+                        {dec.recommendedOption && (
+                          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => handleReject(dec)}>
+                            Reject
+                          </Button>
+                        )}
                       </div>
                     )}
 
@@ -192,7 +208,8 @@ export default function DecisionsPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm truncate">{dec.question}</p>
                         <p className="text-xs text-muted-foreground">
-                          {requestorLabel} asked · Answered: <span className="text-foreground">{dec.answer}</span>
+                          {requestorLabel} asked · {dec.resolution ? RESOLUTION_LABEL[dec.resolution] : "Answered"}
+                          {dec.answer && <>: <span className="text-foreground">{dec.answer}</span></>}
                           {dec.answeredAt && ` · ${formatDate(dec.answeredAt)}`}
                         </p>
                       </div>

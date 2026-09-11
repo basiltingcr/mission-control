@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/lib/toast";
 import { apiFetch } from "@/lib/api-client";
 import type { DecisionItem } from "@/lib/types";
 import { AGENT_ROLES } from "@/lib/types";
+import { ProposalMeta, isRecommended } from "@/components/proposal-meta";
 
 const agentIcons: Record<string, typeof User> = {
   me: User,
@@ -54,24 +55,24 @@ export function DecisionDialog({ open, onOpenChange, decision, onAnswered }: Dec
     return d.toLocaleDateString();
   };
 
-  const handleAnswer = async (answer: string) => {
-    if (!answer.trim()) return;
+  const handleAnswer = async (answer: string, reject = false) => {
+    if (!reject && !answer.trim()) return;
     setIsSubmitting(true);
     try {
       const res = await apiFetch("/api/decisions", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: decision.id,
-          status: "answered",
-          answer: answer.trim(),
-        }),
+        body: JSON.stringify(
+          reject
+            ? { id: decision.id, status: "answered", resolution: "rejected" }
+            : { id: decision.id, status: "answered", answer: answer.trim() }
+        ),
       });
       if (!res.ok) {
         showError("Failed to answer decision");
         return;
       }
-      showSuccess(`Decision answered: "${answer.trim()}"`);
+      showSuccess(reject ? "Proposal rejected" : `Decision answered: "${answer.trim()}"`);
       setCustomAnswer("");
       onOpenChange(false);
       // Small delay to let the write complete before re-running the task
@@ -118,21 +119,29 @@ export function DecisionDialog({ open, onOpenChange, decision, onAnswered }: Dec
             </p>
           )}
 
-          {/* Option buttons */}
+          <ProposalMeta decision={decision} />
+
+          {/* Option buttons — the recommended one is filled, the rest outlined */}
           {decision.options.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {decision.options.map((opt, i) => (
                 <Button
                   key={i}
-                  variant="outline"
+                  variant={isRecommended(decision, opt) ? "default" : "outline"}
                   size="sm"
                   className="text-xs"
                   disabled={isSubmitting}
                   onClick={() => handleAnswer(opt)}
                 >
                   {opt}
+                  {isRecommended(decision, opt) && <span className="ml-1 opacity-70">· recommended</span>}
                 </Button>
               ))}
+              {decision.recommendedOption && (
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" disabled={isSubmitting} onClick={() => handleAnswer("", true)}>
+                  Reject
+                </Button>
+              )}
             </div>
           )}
 
