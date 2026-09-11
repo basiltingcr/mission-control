@@ -19,6 +19,17 @@ commands were issued but never run. Committed 2026-09-11 at the Phase 3 close-ou
 - Browser on :3001: three curl-POSTed proposals rendered with badges and filled default;
   Skip → accepted, Retry → edited, Reject → rejected, all present in data/decisions.json
 
+## Repository state (pasted from Basil's terminal, 2026-09-11, after push)
+```
+$ git status --short; git log --oneline -4
+ce9bb3c (HEAD -> main, origin/main, origin/HEAD) STATE: Phase 4 per D-013, data files skip-worktree, commit-claim corrected
+8d1994a Render proposals: recommended option filled, door/expiry/evidence, Reject action
+7af6f2c Decisions carry a proposal shape: recommended default, door, evidence, expiry
+7b29250 STATE: correct the :3000 note — occupant transient, Ops Desk uses 5477/4477
+```
+Status empty; HEAD = origin/main. data/*.json marked skip-worktree before these commits (status
+showed no data/ lines).
+
 ## NOT verified
 - The pre-launch DecisionDialog (task-card path) — only the Decisions page was exercised
 - The loop-detection proposal from run-task.ts on a real three-failure task
