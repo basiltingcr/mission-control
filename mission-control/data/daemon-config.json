@@ -1,6 +1,6 @@
 {
   "polling": {
-    "enabled": true,
+    "enabled": false,
     "intervalMinutes": 5
   },
   "concurrency": {
@@ -8,17 +8,17 @@
   },
   "schedule": {
     "dailyPlan": {
-      "enabled": true,
+      "enabled": false,
       "cron": "0 7 * * *",
       "command": "daily-plan"
     },
     "standup": {
-      "enabled": true,
+      "enabled": false,
       "cron": "0 9 * * 1-5",
       "command": "standup"
     },
     "weeklyReview": {
-      "enabled": true,
+      "enabled": false,
       "cron": "0 17 * * 5",
       "command": "weekly-review"
     }
@@ -30,14 +30,12 @@
     "retryDelayMinutes": 5,
     "skipPermissions": false,
     "allowedTools": [
-      "Edit",
-      "Write",
       "Read",
       "Glob",
       "Grep",
-      "Bash",
-      "WebSearch",
-      "WebFetch"
+      "Edit",
+      "Write",
+      "Bash"
     ],
     "agentTeams": false,
     "claudeBinaryPath": null,

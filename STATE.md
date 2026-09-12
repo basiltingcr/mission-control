@@ -1,14 +1,15 @@
 # mission-control (fork) — STATE
 
-Updated 2026-09-11. Live state only; reasoning lives in DECISIONS.md, session detail in handoffs/.
+Updated 2026-09-12. Live state only; reasoning lives in DECISIONS.md, session detail in handoffs/.
 Upstream: MeisnerDan/mission-control. This fork is Basil's cross-project cockpit (workspace D-008).
 
 ## Focus
-Phase 3 done. Phase 4 per workspace D-013 (2026-09-11): this app stays on the Mac as the cockpit with
-local execution OFF — unattended coding runs in Anthropic-hosted routines; Run fires a routine (4.4);
-the daemon's only jobs become the expiry sweep (4.5) and, later, nothing that spawns `claude` here.
-First step is 4.0 lock-down: clear the Wild Pearl venture path, polling off, allowedTools trimmed.
-Order and checks: workspace STATE.md.
+Phase 3 done. Phase 4 per workspace D-013: this app stays on the Mac as the cockpit with local
+execution OFF — unattended coding runs in Anthropic-hosted routines; Run fires a routine (4.4); the
+daemon's only job becomes the expiry sweep (4.5). 4.0 lock-down DONE 2026-09-12 (workspace D-014):
+Wild Pearl `path` null; polling off; dailyPlan/standup/weeklyReview off; allowedTools Read, Glob, Grep,
+Edit, Write, Bash. `daemon-config.json` is TRACKED and its change is uncommitted — commit it.
+Next here: 4.4 (Run → routine API trigger), 4.5 (expiry sweep). Order and checks: workspace STATE.md.
 
 ## Threads
 | Thread | Status | Next |
@@ -40,6 +41,14 @@ repo root, and a project with no path runs its agents there.
   session) — if the app is on another port those calls miss. Dormant: autoExecute false.
   Fix if it ever matters: one MC_BASE_URL env-derived constant for both call sites.
 - expiresAt / onExpiry are stored and displayed, not enforced — no sweep exists yet
+- `run-task.ts` completion report: when `JSON.parse(stdout)` fails, the inbox body is the raw JSON tail cut at
+  500 chars and `numTurns`/`costUsd` are null (1 of 3 manual runs on 2026-09-12; the other two parsed).
+  Cause not observed — raw stdout is not kept. Fix candidates: capture stdout to the run record, or parse
+  the last JSON line instead of the whole buffer
+- allowedTools does not scope paths: with Bash allowed, a Run in the `workspace` project listed
+  ~/Desktop/Wild Pearl (run_1789191420178) — the workspace 4.8 baseline
+- Manual Run (`api/tasks/[id]/run`) spawns `run-task.ts` directly and works with polling off and the
+  daemon down; only the Next app must be up
 - Proposal UI is untested (React, suite is node-env); verified by hand only
 - A task whose project path is set but unusable exits with only a daemon.log line — no board
   trace, no decision item (same as upstream's blocked/already-running exits)
